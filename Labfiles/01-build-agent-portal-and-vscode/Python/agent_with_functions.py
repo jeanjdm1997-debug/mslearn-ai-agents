@@ -1,16 +1,16 @@
- import base64
- import os
- from pathlib import Path
+import base64
+import os
+from pathlib import Path
 
- from azure.ai.projects import AIProjectClient
- from azure.identity import DefaultAzureCredential
- from dotenv import load_dotenv
+from azure.ai.projects import AIProjectClient
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
     
     
- OUTPUT_DIR = Path("agent_outputs")
+OUTPUT_DIR = Path("agent_outputs")
     
     
- def get_output_path(filename):
+def get_output_path(filename):
      """Create a unique path for generated files."""
      OUTPUT_DIR.mkdir(exist_ok=True)
      file_name = Path(filename).name
@@ -26,20 +26,19 @@
      return output_path
 
 
- def save_bytes(file_bytes, filename):
+def save_bytes(file_bytes, filename):
      """Save binary content to a local file."""
      output_path = get_output_path(filename)
      with open(output_path, "wb") as file_handle:
          file_handle.write(file_bytes)
      return output_path
 
-
- def save_image(image_data, filename):
+def save_image(image_data, filename):
      """Save base64 image data to a file."""
      return save_bytes(base64.b64decode(image_data), filename)
 
 
- def download_container_file(openai_client, annotation, downloaded_files):
+def download_container_file(openai_client, annotation, downloaded_files):
      """Download a cited container file once and return its local path."""
      cache_key = (annotation.container_id, annotation.file_id)
      if cache_key in downloaded_files:
@@ -57,7 +56,7 @@
      return output_path
 
 
- def format_output_text(content_item, openai_client, downloaded_files):
+def format_output_text(content_item, openai_client, downloaded_files):
      """Replace sandbox file citations with local file paths."""
      text = content_item.text or ""
      replacements = []
@@ -87,7 +86,7 @@
      return text, referenced_files
     
     
- def main():
+def main():
      # Initialize the project client
      load_dotenv()
      project_endpoint = os.environ.get("PROJECT_ENDPOINT")
@@ -197,5 +196,5 @@
          if not handled_output and hasattr(response, "output_text") and response.output_text:
              print(f"\nAgent: {response.output_text}\n")
 
- if __name__ == "__main__":
+if __name__ == "__main__":
      main()
