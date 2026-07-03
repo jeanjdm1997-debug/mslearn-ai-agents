@@ -195,6 +195,5 @@ def main():
 
          if not handled_output and hasattr(response, "output_text") and response.output_text:
              print(f"\nAgent: {response.output_text}\n")
-
 if __name__ == "__main__":
      main()
