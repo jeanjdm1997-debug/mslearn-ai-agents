@@ -90,7 +90,7 @@ def main():
      # Initialize the project client
      load_dotenv()
      project_endpoint = os.environ.get("PROJECT_ENDPOINT")
-     agent_name = os.environ.get("AGENT_NAME", "it-support-agent")
+     agent_name = os.environ.get("AGENT_NAME", "it-agent")
         
      if not project_endpoint:
          print("Error: PROJECT_ENDPOINT environment variable not set")
