@@ -157,8 +157,8 @@ def main():
              for item in response.output:
                  item_type = getattr(item, "type", "")
 
-                 if item_type == "message" and getattr(item, "content", None):
-                     for content_item in item.content:
+                 if item_type == "message" and hasattr(item, "content"):
+                    for content_item in (getattr(item, "content", []) or []):
                          if getattr(content_item, "type", "") != "output_text":
                              continue
 
@@ -173,16 +173,15 @@ def main():
                              print(f"\nAgent: {formatted_text}\n")
                              handled_output = True
 
-                 elif hasattr(item, "text") and item.text:
-                     print(f"\nAgent: {item.text}\n")
-                     handled_output = True
-
                  elif item_type == "image":
                      image_count += 1
                      filename = f"chart_{image_count}.png"
 
-                     if hasattr(item, "image") and hasattr(item.image, "data"):
-                         file_path = save_image(item.image.data, filename)
+                     image_obj = getattr(item, "image", None)
+                     image_data = getattr(image_obj, "data", None)
+
+                     if image_data:
+                         file_path = save_image(image_data, filename)
                          print(f"\n[Agent generated a chart - saved to: {file_path}]")
                      else:
                          print("\n[Agent generated an image]")
