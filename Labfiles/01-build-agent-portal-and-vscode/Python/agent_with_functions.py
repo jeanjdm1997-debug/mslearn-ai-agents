@@ -6,7 +6,6 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
     
-    
 OUTPUT_DIR = Path("agent_outputs")
     
     
@@ -89,8 +88,8 @@ def format_output_text(content_item, openai_client, downloaded_files):
 def main():
      # Initialize the project client
      load_dotenv()
-     project_endpoint = os.environ.get("PROJECT_ENDPOINT")
-     agent_name = os.environ.get("AGENT_NAME", "it-agent")
+     project_endpoint = os.environ.get("project_endpoint")
+     agent_name = os.environ.get("agent_name", "it-agent")
         
      if not project_endpoint:
          print("Error: PROJECT_ENDPOINT environment variable not set")
