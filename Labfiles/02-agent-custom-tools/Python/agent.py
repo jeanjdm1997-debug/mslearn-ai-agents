@@ -16,8 +16,8 @@ def main():
 
     # Load environment variables from .env file
     load_dotenv()
-    project_endpoint = os.getenv("PROJECT_ENDPOINT")
-    model_deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
+    project_endpoint = os.getenv("project_endpoint")
+    model_deployment = os.getenv("model_deployment_name")
 
     # Connect to the project client
     with DefaultAzureCredential() as credential, \
@@ -110,10 +110,10 @@ report_tool = FunctionTool(
         
 
         # Create a new agent with the function tools
-        agent = project_client.agents.create_version(
-            agent_name="astronomy-agent",
+        agent=project_client.agents.create_version(
+            agent_name="agent-with-tools",
             definition=PromptAgentDefinition(
-                model=model_deployment,
+                model= "gpt-5",
                 instructions=
                     """You are an astronomy observations assistant that helps users find 
                     information about astronomical events and calculate telescope rental costs. 
@@ -155,13 +155,13 @@ report_tool = FunctionTool(
             # Process function calls
             for item in response.output:
                 if item.type == "function_call":
-                    result = None
+                    result = ""
                     if item.name == "next_visible_event":
-                        result = next_visible_event(**json.loads(item.arguments))
+                        result = next_visible_event(**json.loads(item.arguments)) or ""
                     elif item.name == "calculate_observation_cost":
-                        result = calculate_observation_cost(**json.loads(item.arguments))
+                        result = calculate_observation_cost(**json.loads(item.arguments)) or ""
                     elif item.name == "generate_observation_report":
-                        result = generate_observation_report(**json.loads(item.arguments))
+                        result = generate_observation_report(**json.loads(item.arguments)) or ""
 
                     # Append the output text
                     input_list.append(
