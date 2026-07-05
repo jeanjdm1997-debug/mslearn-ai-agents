@@ -35,13 +35,16 @@ PRIORITY_MULTIPLIERS = _load_rates("data/priority_multipliers.txt")
 # Determine the next visible astronomical event for a given location
 def next_visible_event(location: str) -> str:
     """Returns the next visible astronomical event for a given location."""
-    today = int(datetime.now().replace("-", "_")
-# Retrieve the next event visible from the location, starting with events later this year
-for name, event_type, date, date_str, locs in EVENTS:
-    if loc in locs and date >= today:
-        return json.dumps({"event": name, "type": event_type, "date": date_str, "visible_from": sorted(locs)})
+    # Represent today's month-day as an integer MMDD to match event date format
+    today = datetime.now()
+    today_int = today.month * 100 + today.day
 
-        return json.dumps({"message": f"No upcoming events visible for {location}."})
+    # Retrieve the next event visible from the location, starting with events later this year
+    for name, event_type, date, date_str, locs in EVENTS:
+        if location in locs and date >= today_int:
+            return json.dumps({"event": name, "type": event_type, "date": date_str, "visible_from": sorted(locs)})
+
+    return json.dumps({"message": f"No upcoming events visible for {location}."})
 
 # Calculate the cost of telescope observation time based on the tier, hours, and priority
 def calculate_observation_cost(telescope_tier: str, hours: float, priority: str) -> str:
