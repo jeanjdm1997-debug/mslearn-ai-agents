@@ -17,7 +17,7 @@ model_deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
 # Connect to the agents client
 with (
     DefaultAzureCredential() as credential, 
-    AIProjectClient(endpoint=project_endpoint, credential=credential) as project_client,
+    AIProjectClient(endpoint="PROJECT_ENDPOINT", credential=credential) as project_client,
     project_client.get_openai_client() as openai_client,
     ):
 
@@ -33,7 +33,7 @@ with (
     agent = project_client.agents.create_version(
         agent_name = "mcp-agent",
         definition = PromptAgentDefinition(
-            model = model_deployment,
+            model = "gpt-5",
             instructions = "You are an agent that can call the MCP tool to retrieve API specifications. Use the available MCP tools to answer users",
             tools = [mcp_tool],
         ),
@@ -54,6 +54,39 @@ with (
     
 
     # Process any MCP approval requests that were generated
+    # The agent may issue several tool calls, each needin its own approval.
+    # So we loop until there are none left
+    while True:
+        # Check if the response contains any MCP approval requests
+        input_list: ResponseInputParam = []
+        for item in response.output:
+            if item.type == "mcp_approval_request":
+                if item.server_label == "api-spec" and item.id:
+                    #Automatically approve the request to allow agent to proceed
+                    input_list.append(
+                        McpApprovalResponse(
+                            type="mcp_approval_response",
+                            approve=True,
+                            approval_request_id=item.id,
+                        )
+                    )
+
+        # no more approvals needed, the agent has completed its work
+        if not input_list:
+            break
+
+        # Send the approval responses back and retrieve the next response
+        response = openai_client.responses.create(
+            input=input_list,
+            previous_response_id=response.id,
+            extra_body = {"agent_reference": {"name": agent.name, "type": "agent_reference"}},
+        )
+
+    print (f"\nAgent response: {response.output_text}")
+
+
+                    
     
     # Clean up resources by deleting the agent version
-    
+    project_client.agents.delete_version(agent_name=agent.name, agent_version=agent.version)
+    print("Agent deleted")
