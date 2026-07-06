@@ -16,32 +16,19 @@ def main():
 
     # Load environment variables from .env file
     load_dotenv()
-    project_endpoint = os.getenv("project_endpoint")
-    model_deployment = os.getenv("model_deployment_name")
+    project_endpoint = os.getenv("PROJECT_ENDPOINT")
+    model_deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
 
     # Connect to the project client
     with DefaultAzureCredential() as credential, \
-         AIProjectClient(endpoint=project_endpoint, credential=credential) as project_client, \
+         AIProjectClient(endpoint = project_endpoint, credential=credential) as project_client, \
          project_client.get_openai_client() as openai_client:
 
         # Define the event function tool
-     event_tool = FunctionTool(
-    name="next_visible_event",
-    description="Get the next visible event in a given location.",
-    parameters={
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "continent to find the next visible event in (e.g. 'north_america', 'south_america', 'australia')",
-            },
-        },
-        "required": ["location"],
-        "additionalProperties": False,
-    },
-    strict=True,
-)
-        
+     event_tool = FunctionTool(),
+
+
+    
 
         # Define the observation cost function tool
 cost_tool = FunctionTool(
