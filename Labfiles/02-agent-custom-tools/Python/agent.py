@@ -108,7 +108,6 @@ report_tool = FunctionTool(
     strict=True,
 )
         
-
         # Create a new agent with the function tools
         agent=project_client.agents.create_version(
             agent_name="agent-with-tools",
