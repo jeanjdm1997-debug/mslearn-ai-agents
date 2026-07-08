@@ -52,7 +52,18 @@ async def process_expenses_data(prompt, expenses_data):
         ):
     
 
-        # Use the agent to process the expenses data    
+        # Use the agent to process the expenses data
+        try:
+            #input prompt
+            prompt_message = [f"{prompt}: {expenses_data}"]
+            #invoke the agent
+            response = await agent.run(prompt_message)
+            #display the response
+            print(f"\nAgent: \n{response}")
+            except Exception as e:
+                #something went wrong, display the error
+                print(f"\nAn error occurred: {e}")
+
 
 
 
