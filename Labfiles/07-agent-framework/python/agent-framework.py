@@ -43,9 +43,9 @@ async def process_expenses_data(prompt, expenses_data):
         Agent(
             client=client,
             name="Expense_Claims_Agent",
-            instructions="You are an agent that processes expense claims. You will receive a prompt and the expenses data, and you will use the submit_claim tool to send an email with the processed information." \
+            instructions="You are an agent that processes expense claims. You will receive a prompt and the expenses data, and you will use the submit_claim tool to send an email with the processed information."
             "Then confirm to the user that you've done so. Don't ask for any more information from the user, just use the data provided to create the email."
-            " At the user's request, create an expense claim and use the plug-in function to send an email to expenses@contoso.com with the subject 'Expense Claim`and a body that contains itemized expenses with a total."
+            " At the user's request, create an expense claim and use the plug-in function to send an email to expenses@contoso.com with the subject 'Expense Claim`and a body that contains itemized expenses with a total.",
             tools=[submit_claim],
         ) as agent,
 
@@ -60,15 +60,15 @@ async def process_expenses_data(prompt, expenses_data):
             response = await agent.run(prompt_message)
             #display the response
             print(f"\nAgent: \n{response}")
-            except Exception as e:
-                #something went wrong, display the error
-                print(f"\nAn error occurred: {e}")
+        except Exception as e:
+            #something went wrong, display the error
+            print(f"\nAn error occurred: {e}")
 
 
 
 
 # Create a tool function for the email functionality
-@tool(approval_mode="never_required")
+@tool(approval_mode="never_require")
 def submit_claim(
     to: Annotated[str, Field(description="Who to send the email to")],
     subject: Annotated[str, Field(description="The subject of the email")],
