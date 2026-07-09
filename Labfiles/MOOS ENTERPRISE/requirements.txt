@@ -1,0 +1,4 @@
+azure-identity
+dotenv
+openai
+azure-ai-projects
