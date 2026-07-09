@@ -1,5 +1,4 @@
 import os
-from typing import cast, Iterable, Any
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
@@ -7,132 +6,48 @@ from email_service import send_invoice_request
 
 load_dotenv()
 
-credential = DefaultAzureCredential()
+#create an openai client
 token_provider = get_bearer_token_provider(
-    credential,
-    "https://cognitiveservices.azure.com/.default"
+    DefaultAzureCredential(), "https://ai.azure.com/.default"
 )
-# Read required configuration from environment
-azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
-deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
-if not azure_openai_endpoint or not deployment:
-    raise RuntimeError(
-        "Missing environment variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_DEPLOYMENT must be set"
-    )
-
-# Client
-client = AzureOpenAI(
-    azure_endpoint=azure_openai_endpoint,
-    azure_ad_token_provider=token_provider,
-    api_version=api_version,
+openai_client = OpenAI(
+    base_url = "Azure_Openai_Endpoint",
+    api_key = token_provider,
 )
-system_prompt = """
-You are an AI assistant for a construction company.
 
-You help customers with:
-- Plumbing
-- Electrical
-- Fencing
-- Roofing
-- Tiling
-- Building
-- Renovations
-
-When a customer wants a quotation or invoice request, collect:
-Client Name
-
-Company Name
-
-Email
-Phone Number
-Service Required
-Address
-Project Scope
-Additional Notes
-
-Once collected, tell the application to call send_invoice_request().
-"""
-
-conversation = [
+#ChatBot Message System
+#Intial Messages
+conversation_message=[
     {
         "role": "system",
-        "content": system_prompt
+        "content": "You are a AI assitant at Moos Enterprise"
     }
 ]
-
+#Loop until the user wants to quit
+print ("Assistant: How can I Assist You Today? \\ or Type Quit to Exit!")
 while True:
-    user = input("customer: ")
-    if user.lower() == "Exit":
+    input_text = input('\nYou:')
+    if input_text.lower() == "Quit":
+        print("Assistant: Goodbye! Hope To Hear From You Soon.")
         break
-    conversation.append(
-        {
-            "role":"user",
-            "content": user
-        }
+
+    #Add User Message
+    conversation_message.append(
+        {"role": "user",
+            "content": input_text}
     )
 
-tool = [
-    {
-        "type": "function",
-        "function": {
-            "name": "send_invoice_request",
-            "description": "Send a quotation or invoice request email to the company.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "client_name": {
-                        "type": "string"
-                    },
-                    "company_name": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "phone": {
-                        "type": "string"
-                    },
-                    "service_required": {
-                        "type": "string"
-                    },
-                    "additional_notes": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "client_name",
-                    "company_name",
-                    "email",
-                    "phone",
-                    "service_required"
-                ]
-            }
-        }
-    }
-]
+    #Agent Completion
+    completion = openai_client.client.chat.completion.create(
+        model = "gpt-5.4"
+        message = conversation_message
+    )
 
-response = client.chat.completions.create(
-    model=deployment,
-    messages=cast(Iterable[Any], conversation),
-    # use the functions parameter (OpenAI-compatible) instead of tools
-    functions=cast(Iterable[Any], tool)
-)
+    assistant_message = completion.choices[0].message.content
+    print ("\nAssistant:", assistant_message)
 
-reply = response.choices[0].message.content or ""
-print()
-print("Assistant:")
-print(reply)
-print()
-
-conversation.append(
-    {
-        "role": "assistant",
-        "content": reply
-    }
-)
-
-# The actual call to send_invoice_request should be performed with
-# concrete values extracted from the assistant response. Keep as placeholder.
-# send_invoice_request(client_name, company_name, email, phone, service_required, additional_notes)
+    #Append the response to the conversation
+    conversation_message.append(
+        {"role": "assistant", "content": assistant_message}
+    )
