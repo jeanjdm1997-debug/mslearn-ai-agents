@@ -1,5 +1,5 @@
 import os
-
+from typing import cast, Iterable, Any
 from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from openai import AzureOpenAI
@@ -8,18 +8,19 @@ from email_service import send_invoice_request
 load_dotenv()
 
 credential = DefaultAzureCredential()
-token_provider = get_bearer_token_provider(
-    "https://cognitiveservices.azure.com/.default"
-)
+token_provider = get_bearer_token_provider(credential)
 
 # Client
+azure_endpoint = os.environ["Azure_Openai_Endpoint"]
+api_version = os.environ["Azure_Openai_API_Version"]
+
 client = AzureOpenAI(
-    azure_endpoint=os.getenv("Azure_Openai_Endpoint"),
-    azure_ad_token=token_provider,
-    api_version=os.getenv("Azure_Openai_API_Version"),
+    azure_endpoint=azure_endpoint,
+    azure_ad_token=token_provider(["https://cognitiveservices.azure.com/.default"]),
+    api_version=api_version,
 )
 
-deployment = os.getenv("Azure_Openai_Deployment")
+deployment = os.environ["Azure_Openai_Deployment"]
 system_prompt = """
 You are an AI assistant for a construction company.
 
@@ -65,25 +66,6 @@ while True:
         }
     )
 
-response = client.chat.completions.create(
-    model=deployment,
-    messages=conversation,
-    tools=tool
-)
-
-reply = response.choices[0].message.content
-print()
-print("Assistant:")
-print(reply)
-print()
-
-conversation.append(
-    {
-        "role": "assistant"
-        "content": reply
-    }
-)
-
 tool = [
     {
         "type": "function",
@@ -117,7 +99,6 @@ tool = [
                     "company_name",
                     "email",
                     "phone",
-                    "address"
                     "service_required"
                 ]
             }
@@ -127,16 +108,24 @@ tool = [
 
 response = client.chat.completions.create(
     model=deployment,
-    messages=conversation,
-    tools=tool
+    messages=cast(Iterable[Any], conversation),
+    # use the functions parameter (OpenAI-compatible) instead of tools
+    functions=cast(Iterable[Any], tool)
 )
 
-send_invoice_request(
-    client_name,
-    company_name,
-    email,
-    phone,
-    service_required,
-    additional_notes,
-    address
+reply = response.choices[0].message.content or ""
+print()
+print("Assistant:")
+print(reply)
+print()
+
+conversation.append(
+    {
+        "role": "assistant",
+        "content": reply
+    }
 )
+
+# The actual call to send_invoice_request should be performed with
+# concrete values extracted from the assistant response. Keep as placeholder.
+# send_invoice_request(client_name, company_name, email, phone, service_required, additional_notes)
