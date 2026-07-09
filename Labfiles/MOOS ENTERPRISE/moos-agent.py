@@ -8,19 +8,26 @@ from email_service import send_invoice_request
 load_dotenv()
 
 credential = DefaultAzureCredential()
-token_provider = get_bearer_token_provider(credential)
+token_provider = get_bearer_token_provider(
+    credential,
+    "https://cognitiveservices.azure.com/.default"
+)
+# Read required configuration from environment
+azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
+deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+
+if not azure_openai_endpoint or not deployment:
+    raise RuntimeError(
+        "Missing environment variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_DEPLOYMENT must be set"
+    )
 
 # Client
-azure_endpoint = os.environ["Azure_Openai_Endpoint"]
-api_version = os.environ["Azure_Openai_API_Version"]
-
 client = AzureOpenAI(
-    azure_endpoint=azure_endpoint,
-    azure_ad_token=token_provider(["https://cognitiveservices.azure.com/.default"]),
+    azure_endpoint=azure_openai_endpoint,
+    azure_ad_token_provider=token_provider,
     api_version=api_version,
 )
-
-deployment = os.environ["Azure_Openai_Deployment"]
 system_prompt = """
 You are an AI assistant for a construction company.
 
