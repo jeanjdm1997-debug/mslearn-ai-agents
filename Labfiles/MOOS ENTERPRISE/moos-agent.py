@@ -11,7 +11,7 @@ token_provider = get_bearer_token_provider(
     DefaultAzureCredential(), "https://ai.azure.com/.default"
 )
 
-openai_client = OpenAI(
+openai_client = AzureOpenAI(
     base_url = "Azure_Openai_Endpoint",
     api_key = token_provider,
 )
@@ -39,12 +39,12 @@ while True:
     )
 
     #Agent Completion
-    completion = openai_client.client.chat.completion.create(
-        model = "gpt-5.4"
-        message = conversation_message
+    completion = openai_client.chat.completions.create(
+        model = "gpt-5.4",
+        messages = conversation_message,  # type: ignore[arg-type]
     )
 
-    assistant_message = completion.choices[0].message.content
+    assistant_message = completion.choices[0].message.content or ""
     print ("\nAssistant:", assistant_message)
 
     #Append the response to the conversation
