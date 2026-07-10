@@ -1,53 +1,19 @@
-import os
-from dotenv import load_dotenv
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
-from email_service import send_invoice_request
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
 
-load_dotenv()
+endpoint = "https://moos-enterprise-agent-resource.services.ai.azure.com/api/projects/moos-enterprise-agent"
 
-#create an openai client
-token_provider = get_bearer_token_provider(
-    DefaultAzureCredential(), "https://ai.azure.com/.default"
+project_client = AIProjectClient(
+    endpoint=endpoint,
+    credential=DefaultAzureCredential(),
 )
 
-openai_client = AzureOpenAI(
-    base_url = "Azure_Openai_Endpoint",
-    api_key = token_provider,
+openai_client = project_client.get_openai_client()
+
+#Reference the agent to get a response
+response = openai_client.responses.create(
+    input = [{"role": "user", "content":"Tell me what you can help me with"}],
+    extra_body = {"agent_reference": {"name": "MY_AGENT", "version": "MY_VERSION", "type": "agent_reference"}},
 )
 
-#ChatBot Message System
-#Intial Messages
-conversation_message=[
-    {
-        "role": "system",
-        "content": "You are a AI assitant at Moos Enterprise"
-    }
-]
-#Loop until the user wants to quit
-print ("Assistant: How can I Assist You Today? \\ or Type Quit to Exit!")
-while True:
-    input_text = input('\nYou:')
-    if input_text.lower() == "Quit":
-        print("Assistant: Goodbye! Hope To Hear From You Soon.")
-        break
-
-    #Add User Message
-    conversation_message.append(
-        {"role": "user",
-            "content": input_text}
-    )
-
-    #Agent Completion
-    completion = openai_client.chat.completions.create(
-        model = "gpt-5.4",
-        messages = conversation_message,  # type: ignore[arg-type]
-    )
-
-    assistant_message = completion.choices[0].message.content or ""
-    print ("\nAssistant:", assistant_message)
-
-    #Append the response to the conversation
-    conversation_message.append(
-        {"role": "assistant", "content": assistant_message}
-    )
+print (f"Response output: {response.output_text}")
